@@ -1,0 +1,86 @@
+services:
+  redis:
+    image: redis:alpine
+    container_name: todo-redis
+    # Exposed for local development only; remove ports in production deployments.
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    image: postgres:15-alpine
+    container_name: todo-postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME:-tododb}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASS:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: todo-backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2"
+    volumes:
+      - ./core:/app
+      - static-data:/app/static
+      - media-data:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - SITE_URL=${SITE_URL:-http://localhost:8000}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build: .
+    container_name: todo-worker
+    command: celery -A core worker -l info
+    volumes:
+      - ./core:/app
+    env_file:
+      - .env
+    environment:
+      - SITE_URL=${SITE_URL:-http://localhost:8000}
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: always
+    ports:
+      - "5000:80"
+      - "25:25"
+    volumes:
+      - smtp4dev-data:/smtp4dev
+    environment:
+      - ServerOptions__Urls=http://*:80
+      - ServerOptions__HostName=smtp4dev
+
+volumes:
+  smtp4dev-data:
+  postgres-data:
+  static-data:
+  media-data:

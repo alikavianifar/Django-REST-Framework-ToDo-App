@@ -1,0 +1,69 @@
+{% load static %}
+{% load humanize %}
+<div class="col-md-4 mb-3">
+    <div class="card p-3">
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#normal">New Task</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#advance">Advance</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div id="normal" class="container tab-pane active"><br>
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label text-light">Task Title</label>
+                        <input class="form-control" type="text" id="title" name="title" autofocus>
+
+                    </div>
+
+
+                    <div class="mb-3 d-none">
+                        <label for="priority" class="form-label text-light">Priority</label>
+                        {{ form.priority }}
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Save Task</button>
+                </form>
+            </div>
+
+            <div id="advance" class="container tab-pane fade"><br>
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label text-light">Task Title</label>
+                        {{ form.title }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label text-light">Due Date</label>
+                        {{ form.due_date }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="priority" class="form-label text-light">Priority</label>
+                        {{ form.priority }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label text-light">Description</label>
+                        {{ form.description }}
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100">Save Task</button>
+                </form>
+            </div>
+
+        </div>
+
+    </div>
+</div>
